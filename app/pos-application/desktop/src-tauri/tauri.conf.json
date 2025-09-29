@@ -6,10 +6,8 @@
   "build": {
     "frontendDist": "../../frontend",
     "devUrl": "http://localhost:3000",
-    "beforeDevCommand": "python server.py"
-    
+    "beforeDevCommand": ""
   },
-  
   "app": {
     "windows": [
       {
