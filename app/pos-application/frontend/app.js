@@ -1,4 +1,63 @@
 // IndexedDB Database Management
+// Check if backend is available
+async function checkBackendConnection() {
+    try {
+        const response = await fetch(`${API_CONFIG.baseURL}/health`);
+        return response.ok;
+    } catch (error) {
+        console.warn('Backend not available, running in offline mode');
+        return false;
+    }
+}
+
+// Initialize application based on backend availability
+document.addEventListener('DOMContentLoaded', async () => {
+    const backendAvailable = await checkBackendConnection();
+    
+    if (backendAvailable) {
+        console.log('✅ Connected to Rust backend');
+        window.posApp = new POSApplicationWithBackend();
+    } else {
+        console.log('📦 Running in offline mode');
+        window.posApp = new POSApplication();
+    }
+});
+
+class POSApplicationWithBackend extends POSApplication {
+    constructor() {
+        super();
+        this.apiClient = new APIClient();
+    }
+    
+    // Override methods to use backend API instead of IndexedDB
+    async loadProducts() {
+        try {
+            const products = await this.apiClient.get('/products');
+            this.products = products;
+            return products;
+        } catch (error) {
+            console.error('Failed to load products from backend:', error);
+            // Fallback to IndexedDB
+            return super.loadProducts();
+        }
+    }
+    
+    async createProduct(productData) {
+        try {
+            const product = await this.apiClient.post('/products', productData);
+            this.products.push(product);
+            this.renderProducts();
+            return product;
+        } catch (error) {
+            console.error('Failed to create product:', error);
+            throw error;
+        }
+    }
+    
+    // ... implement other backend integration methods
+}
+
+
 class POSDatabase {
     constructor() {
         this.dbName = 'POSApplication';
