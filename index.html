@@ -8,43 +8,56 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <p>Initializing Wholesale POS System...</p>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
     <!-- Navigation Sidebar -->
     <nav class="sidebar">
         <div class="sidebar-header">
             <h2>WholeSale POS</h2>
+            <div class="system-status" id="db-status">
+                <span class="status-indicator" id="status-indicator"></span>
+                <span class="status-text" id="status-text">Connecting...</span>
+            </div>
         </div>
         <div class="sidebar-menu">
-            <button class="menu-item active" data-view="dashboard">
+            <button class="menu-item active" data-view="dashboard" data-title="Dashboard">
                 <span class="menu-icon">📊</span>
                 Dashboard
             </button>
-            <button class="menu-item" data-view="pos">
+            <button class="menu-item" data-view="pos" data-title="Point of Sale">
                 <span class="menu-icon">🛒</span>
                 Point of Sale
             </button>
-            <button class="menu-item" data-view="inventory">
+            <button class="menu-item" data-view="inventory" data-title="Inventory Management">
                 <span class="menu-icon">📦</span>
                 Inventory
             </button>
-            <button class="menu-item" data-view="customers">
+            <button class="menu-item" data-view="customers" data-title="Customer Management">
                 <span class="menu-icon">👥</span>
                 Customers
             </button>
-            <button class="menu-item" data-view="suppliers">
+            <button class="menu-item" data-view="suppliers" data-title="Supplier Management">
                 <span class="menu-icon">🏭</span>
                 Suppliers
             </button>
-            <button class="menu-item" data-view="orders">
-                <span class="menu-icon">📋</span>
-                Orders
+            <button class="menu-item" data-view="sales" data-title="Sales Management">
+                <span class="menu-icon">💰</span>
+                Sales
             </button>
-            <button class="menu-item" data-view="reports">
+            <button class="menu-item" data-view="reports" data-title="Reports & Analytics">
                 <span class="menu-icon">📈</span>
                 Reports
             </button>
-            <button class="menu-item" data-view="accounting">
-                <span class="menu-icon">💰</span>
-                Accounting
+            <button class="menu-item" data-view="settings" data-title="System Settings">
+                <span class="menu-icon">⚙️</span>
+                Settings
             </button>
         </div>
     </nav>
@@ -54,10 +67,20 @@
         <!-- Top Header -->
         <header class="top-header">
             <div class="header-content">
-                <h1 id="page-title">Dashboard</h1>
+                <div class="header-left">
+                    <h1 id="page-title">Dashboard</h1>
+                    <nav class="breadcrumb" id="breadcrumb">
+                        <span class="breadcrumb-item active">Dashboard</span>
+                    </nav>
+                </div>
                 <div class="header-actions">
-                    <button class="btn btn--secondary theme-toggle">🌙</button>
-                    <div class="user-info">Admin User</div>
+                    <button class="btn btn--secondary btn--sm" id="backup-btn" title="Backup Data">📥</button>
+                    <button class="btn btn--secondary btn--sm" id="restore-btn" title="Restore Data">📤</button>
+                    <button class="btn btn--secondary theme-toggle" title="Toggle Theme">🌙</button>
+                    <div class="user-info">
+                        <span class="user-name">Admin User</span>
+                        <span class="user-role">System Administrator</span>
+                    </div>
                 </div>
             </div>
         </header>
@@ -70,32 +93,32 @@
                         <span class="kpi-icon">💵</span>
                         <span class="kpi-label">Total Revenue</span>
                     </div>
-                    <div class="kpi-value" id="total-revenue">₹24,67,890</div>
-                    <div class="kpi-change positive">+12.5% from last month</div>
+                    <div class="kpi-value" id="total-revenue">₹0</div>
+                    <div class="kpi-change" id="revenue-change">Loading...</div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-header">
                         <span class="kpi-icon">📦</span>
-                        <span class="kpi-label">Orders Today</span>
+                        <span class="kpi-label">Total Products</span>
                     </div>
-                    <div class="kpi-value" id="orders-today">147</div>
-                    <div class="kpi-change positive">+8.3% from yesterday</div>
+                    <div class="kpi-value" id="total-products">0</div>
+                    <div class="kpi-change" id="products-change">Loading...</div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-header">
                         <span class="kpi-icon">👥</span>
                         <span class="kpi-label">Active Customers</span>
                     </div>
-                    <div class="kpi-value" id="active-customers">2,847</div>
-                    <div class="kpi-change neutral">+2.1% from last week</div>
+                    <div class="kpi-value" id="total-customers">0</div>
+                    <div class="kpi-change" id="customers-change">Loading...</div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-header">
-                        <span class="kpi-icon">🏪</span>
-                        <span class="kpi-label">Inventory Value</span>
+                        <span class="kpi-icon">⚠️</span>
+                        <span class="kpi-label">Low Stock Items</span>
                     </div>
-                    <div class="kpi-value" id="inventory-value">₹18,23,450</div>
-                    <div class="kpi-change negative">-1.2% from last month</div>
+                    <div class="kpi-value" id="low-stock-count">0</div>
+                    <div class="kpi-change" id="stock-change">Loading...</div>
                 </div>
             </div>
 
@@ -103,10 +126,10 @@
                 <div class="dashboard-card">
                     <div class="card-header">
                         <h3>Sales Performance</h3>
-                        <select class="form-control chart-period">
-                            <option>Last 7 Days</option>
-                            <option>Last 30 Days</option>
-                            <option>Last 3 Months</option>
+                        <select class="form-control chart-period" id="sales-period">
+                            <option value="7">Last 7 Days</option>
+                            <option value="30">Last 30 Days</option>
+                            <option value="90">Last 3 Months</option>
                         </select>
                     </div>
                     <div class="chart-container" style="position: relative; height: 300px;">
@@ -116,30 +139,11 @@
 
                 <div class="dashboard-card">
                     <div class="card-header">
-                        <h3>Recent Orders</h3>
-                        <button class="btn btn--primary btn--sm">View All</button>
+                        <h3>Recent Sales</h3>
+                        <button class="btn btn--primary btn--sm" onclick="showView('sales')">View All</button>
                     </div>
-                    <div class="recent-orders">
-                        <div class="order-item">
-                            <div class="order-info">
-                                <div class="order-id">ORD-2025-0001</div>
-                                <div class="order-customer">Raj Traders Pvt Ltd</div>
-                            </div>
-                            <div class="order-details">
-                                <div class="order-amount">₹45,670</div>
-                                <span class="status status--success">Completed</span>
-                            </div>
-                        </div>
-                        <div class="order-item">
-                            <div class="order-info">
-                                <div class="order-id">ORD-2025-0002</div>
-                                <div class="order-customer">Modern Grocery Store</div>
-                            </div>
-                            <div class="order-details">
-                                <div class="order-amount">₹23,450</div>
-                                <span class="status status--warning">Pending</span>
-                            </div>
-                        </div>
+                    <div class="recent-items" id="recent-sales">
+                        <div class="loading">Loading recent sales...</div>
                     </div>
                 </div>
             </div>
@@ -150,27 +154,31 @@
             <div class="pos-container">
                 <div class="product-section">
                     <div class="pos-header">
-                        <input type="text" placeholder="Search products..." class="form-control product-search">
-                        <select class="form-control category-filter">
+                        <input type="text" placeholder="Search products (Press / to focus)..." class="form-control product-search" id="product-search">
+                        <select class="form-control category-filter" id="category-filter">
                             <option value="">All Categories</option>
-                            <option value="Grains">Grains</option>
-                            <option value="Oils">Oils</option>
-                            <option value="Spices">Spices</option>
                         </select>
+                        <button class="btn btn--secondary" id="barcode-scan-btn" title="Scan Barcode">📷</button>
                     </div>
                     <div class="product-grid" id="product-grid">
-                        <!-- Products will be populated by JavaScript -->
+                        <div class="loading">Loading products...</div>
                     </div>
                 </div>
                 
                 <div class="cart-section">
                     <div class="customer-selection">
+                        <label class="form-label">Customer</label>
                         <select class="form-control" id="customer-select">
-                            <option value="">Select Customer</option>
+                            <option value="">Walk-in Customer</option>
                         </select>
+                        <button class="btn btn--secondary btn--sm" id="add-customer-quick">+ Quick Add</button>
                     </div>
                     <div class="cart-items" id="cart-items">
-                        <div class="empty-cart">Cart is empty</div>
+                        <div class="empty-cart">
+                            <div class="empty-icon">🛒</div>
+                            <p>Cart is empty</p>
+                            <p class="empty-subtitle">Add products to get started</p>
+                        </div>
                     </div>
                     <div class="cart-totals">
                         <div class="total-row">
@@ -178,11 +186,11 @@
                             <span id="subtotal">₹0.00</span>
                         </div>
                         <div class="total-row">
-                            <span>CGST (9%):</span>
+                            <span>CGST:</span>
                             <span id="cgst">₹0.00</span>
                         </div>
                         <div class="total-row">
-                            <span>SGST (9%):</span>
+                            <span>SGST:</span>
                             <span id="sgst">₹0.00</span>
                         </div>
                         <div class="total-row final-total">
@@ -191,11 +199,14 @@
                         </div>
                     </div>
                     <div class="payment-methods">
-                        <button class="btn btn--primary payment-btn" data-method="cash">Cash</button>
-                        <button class="btn btn--secondary payment-btn" data-method="card">Card</button>
-                        <button class="btn btn--secondary payment-btn" data-method="upi">UPI</button>
+                        <button class="btn btn--secondary payment-btn active" data-method="cash">💵 Cash</button>
+                        <button class="btn btn--secondary payment-btn" data-method="card">💳 Card</button>
+                        <button class="btn btn--secondary payment-btn" data-method="upi">📱 UPI</button>
                     </div>
-                    <button class="btn btn--primary btn--full-width checkout-btn" disabled>Complete Sale</button>
+                    <div class="checkout-actions">
+                        <button class="btn btn--outline btn--sm" id="save-quote-btn" disabled>Save Quote</button>
+                        <button class="btn btn--primary checkout-btn" id="checkout-btn" disabled>Complete Sale</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -203,16 +214,49 @@
         <!-- Inventory View -->
         <div id="inventory-view" class="view">
             <div class="inventory-header">
+                <div class="inventory-search">
+                    <input type="text" placeholder="Search products..." class="form-control" id="inventory-search">
+                    <select class="form-control" id="inventory-category-filter">
+                        <option value="">All Categories</option>
+                    </select>
+                    <select class="form-control" id="inventory-status-filter">
+                        <option value="">All Status</option>
+                        <option value="low">Low Stock</option>
+                        <option value="out">Out of Stock</option>
+                        <option value="normal">Normal Stock</option>
+                    </select>
+                </div>
                 <div class="inventory-actions">
-                    <button class="btn btn--primary" id="add-product-btn">Add Product</button>
-                    <button class="btn btn--secondary">Export</button>
-                    <button class="btn btn--secondary">Import</button>
+                    <button class="btn btn--secondary" id="bulk-update-btn">Bulk Update</button>
+                    <button class="btn btn--secondary" id="export-inventory-btn">Export</button>
+                    <button class="btn btn--primary" id="add-product-btn">+ Add Product</button>
+                </div>
+            </div>
+            <div class="inventory-stats">
+                <div class="stat-card">
+                    <span class="stat-label">Total Products</span>
+                    <span class="stat-value" id="inv-total-products">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Low Stock</span>
+                    <span class="stat-value text-warning" id="inv-low-stock">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Out of Stock</span>
+                    <span class="stat-value text-error" id="inv-out-stock">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Total Value</span>
+                    <span class="stat-value" id="inv-total-value">₹0</span>
                 </div>
             </div>
             <div class="inventory-table-container">
                 <table class="inventory-table">
                     <thead>
                         <tr>
+                            <th>
+                                <input type="checkbox" id="select-all-products">
+                            </th>
                             <th>Product ID</th>
                             <th>Product Name</th>
                             <th>Category</th>
@@ -220,11 +264,14 @@
                             <th>Reorder Level</th>
                             <th>Status</th>
                             <th>Price</th>
+                            <th>GST Rate</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="inventory-tbody">
-                        <!-- Inventory items will be populated by JavaScript -->
+                        <tr>
+                            <td colspan="10" class="loading">Loading inventory...</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -233,51 +280,96 @@
         <!-- Customers View -->
         <div id="customers-view" class="view">
             <div class="customers-header">
-                <button class="btn btn--primary" id="add-customer-btn">Add Customer</button>
+                <div class="customers-search">
+                    <input type="text" placeholder="Search customers..." class="form-control" id="customers-search">
+                    <select class="form-control" id="customers-sort">
+                        <option value="name">Sort by Name</option>
+                        <option value="totalValue">Sort by Total Value</option>
+                        <option value="totalOrders">Sort by Total Orders</option>
+                        <option value="createdAt">Sort by Date Added</option>
+                    </select>
+                </div>
+                <div class="customers-actions">
+                    <button class="btn btn--secondary" id="export-customers-btn">Export</button>
+                    <button class="btn btn--primary" id="add-customer-btn">+ Add Customer</button>
+                </div>
             </div>
             <div class="customers-grid" id="customers-grid">
-                <!-- Customer cards will be populated by JavaScript -->
+                <div class="loading">Loading customers...</div>
             </div>
         </div>
 
         <!-- Suppliers View -->
         <div id="suppliers-view" class="view">
             <div class="suppliers-header">
-                <button class="btn btn--primary" id="add-supplier-btn">Add Supplier</button>
+                <div class="suppliers-search">
+                    <input type="text" placeholder="Search suppliers..." class="form-control" id="suppliers-search">
+                    <select class="form-control" id="suppliers-sort">
+                        <option value="name">Sort by Name</option>
+                        <option value="rating">Sort by Rating</option>
+                        <option value="outstanding">Sort by Outstanding</option>
+                    </select>
+                </div>
+                <div class="suppliers-actions">
+                    <button class="btn btn--secondary" id="export-suppliers-btn">Export</button>
+                    <button class="btn btn--primary" id="add-supplier-btn">+ Add Supplier</button>
+                </div>
             </div>
             <div class="suppliers-grid" id="suppliers-grid">
-                <!-- Supplier cards will be populated by JavaScript -->
+                <div class="loading">Loading suppliers...</div>
             </div>
         </div>
 
-        <!-- Orders View -->
-        <div id="orders-view" class="view">
-            <div class="orders-header">
-                <div class="orders-filters">
-                    <select class="form-control">
+        <!-- Sales View -->
+        <div id="sales-view" class="view">
+            <div class="sales-header">
+                <div class="sales-filters">
+                    <input type="date" class="form-control" id="sales-date-from">
+                    <input type="date" class="form-control" id="sales-date-to">
+                    <select class="form-control" id="sales-status-filter">
                         <option value="">All Status</option>
-                        <option value="pending">Pending</option>
                         <option value="completed">Completed</option>
+                        <option value="pending">Pending</option>
                         <option value="cancelled">Cancelled</option>
                     </select>
-                    <input type="date" class="form-control">
+                    <button class="btn btn--secondary" id="filter-sales-btn">Filter</button>
+                </div>
+                <div class="sales-actions">
+                    <button class="btn btn--secondary" id="export-sales-btn">Export</button>
                 </div>
             </div>
-            <div class="orders-table-container">
-                <table class="orders-table">
+            <div class="sales-stats">
+                <div class="stat-card">
+                    <span class="stat-label">Total Sales</span>
+                    <span class="stat-value" id="sales-total-count">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Total Revenue</span>
+                    <span class="stat-value" id="sales-total-revenue">₹0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Average Sale</span>
+                    <span class="stat-value" id="sales-avg-value">₹0</span>
+                </div>
+            </div>
+            <div class="sales-table-container">
+                <table class="sales-table">
                     <thead>
                         <tr>
-                            <th>Order ID</th>
+                            <th>Invoice #</th>
                             <th>Customer</th>
                             <th>Date</th>
                             <th>Items</th>
                             <th>Amount</th>
+                            <th>Payment</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="orders-tbody">
-                        <!-- Orders will be populated by JavaScript -->
+                    <tbody id="sales-tbody">
+                        <tr>
+                            <td colspan="8" class="loading">Loading sales...</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -285,52 +377,95 @@
 
         <!-- Reports View -->
         <div id="reports-view" class="view">
+            <div class="reports-header">
+                <h2>Reports & Analytics</h2>
+            </div>
             <div class="reports-grid">
-                <div class="report-card">
+                <div class="report-card" data-report="sales">
+                    <div class="report-icon">📊</div>
                     <h3>Sales Report</h3>
-                    <p>Detailed sales analysis and trends</p>
-                    <button class="btn btn--primary">Generate Report</button>
+                    <p>Detailed sales analysis with trends and patterns</p>
+                    <button class="btn btn--primary generate-report-btn">Generate Report</button>
                 </div>
-                <div class="report-card">
+                <div class="report-card" data-report="gst">
+                    <div class="report-icon">📋</div>
                     <h3>GST Report</h3>
-                    <p>GST compliance and tax calculations</p>
-                    <button class="btn btn--primary">Generate Report</button>
+                    <p>GST compliance report with tax calculations</p>
+                    <button class="btn btn--primary generate-report-btn">Generate Report</button>
                 </div>
-                <div class="report-card">
+                <div class="report-card" data-report="inventory">
+                    <div class="report-icon">📦</div>
                     <h3>Inventory Report</h3>
-                    <p>Stock levels and movement analysis</p>
-                    <button class="btn btn--primary">Generate Report</button>
+                    <p>Stock levels, movement, and valuation analysis</p>
+                    <button class="btn btn--primary generate-report-btn">Generate Report</button>
                 </div>
-                <div class="report-card">
+                <div class="report-card" data-report="customer">
+                    <div class="report-icon">👥</div>
                     <h3>Customer Analysis</h3>
-                    <p>Customer behavior and purchase patterns</p>
-                    <button class="btn btn--primary">Generate Report</button>
+                    <p>Customer behavior and purchase pattern insights</p>
+                    <button class="btn btn--primary generate-report-btn">Generate Report</button>
+                </div>
+                <div class="report-card" data-report="supplier">
+                    <div class="report-icon">🏭</div>
+                    <h3>Supplier Report</h3>
+                    <p>Supplier performance and outstanding analysis</p>
+                    <button class="btn btn--primary generate-report-btn">Generate Report</button>
+                </div>
+                <div class="report-card" data-report="profit">
+                    <div class="report-icon">💰</div>
+                    <h3>Profit & Loss</h3>
+                    <p>Comprehensive P&L statement and profitability</p>
+                    <button class="btn btn--primary generate-report-btn">Generate Report</button>
                 </div>
             </div>
         </div>
 
-        <!-- Accounting View -->
-        <div id="accounting-view" class="view">
-            <div class="accounting-grid">
-                <div class="account-card">
-                    <h3>Cash Account</h3>
-                    <div class="account-balance">₹2,45,670</div>
-                    <div class="account-change positive">+₹12,450 today</div>
+        <!-- Settings View -->
+        <div id="settings-view" class="view">
+            <div class="settings-container">
+                <div class="settings-section">
+                    <h3>Database Management</h3>
+                    <div class="settings-row">
+                        <label>Database Status:</label>
+                        <span id="db-size-info">Calculating...</span>
+                    </div>
+                    <div class="settings-actions">
+                        <button class="btn btn--secondary" id="clear-data-btn">Clear All Data</button>
+                        <button class="btn btn--primary" id="seed-data-btn">Load Sample Data</button>
+                    </div>
                 </div>
-                <div class="account-card">
-                    <h3>Bank Account</h3>
-                    <div class="account-balance">₹8,67,890</div>
-                    <div class="account-change positive">+₹45,230 today</div>
+                
+                <div class="settings-section">
+                    <h3>System Settings</h3>
+                    <div class="settings-row">
+                        <label>Theme:</label>
+                        <select class="form-control" id="theme-select">
+                            <option value="auto">Auto</option>
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                        </select>
+                    </div>
+                    <div class="settings-row">
+                        <label>Auto-save:</label>
+                        <input type="checkbox" id="auto-save-toggle" checked>
+                    </div>
                 </div>
-                <div class="account-card">
-                    <h3>Accounts Receivable</h3>
-                    <div class="account-balance">₹1,23,450</div>
-                    <div class="account-change negative">+₹8,900 pending</div>
-                </div>
-                <div class="account-card">
-                    <h3>Accounts Payable</h3>
-                    <div class="account-balance">₹87,650</div>
-                    <div class="account-change neutral">₹42,500 due</div>
+                
+                <div class="settings-section">
+                    <h3>Business Information</h3>
+                    <div class="form-group">
+                        <label class="form-label">Business Name</label>
+                        <input type="text" class="form-control" id="business-name" value="Wholesale POS System">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">GST Number</label>
+                        <input type="text" class="form-control" id="business-gst" placeholder="Enter GST Number">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Address</label>
+                        <textarea class="form-control" id="business-address" rows="3"></textarea>
+                    </div>
+                    <button class="btn btn--primary" id="save-settings-btn">Save Settings</button>
                 </div>
             </div>
         </div>
@@ -344,43 +479,63 @@
                 <button class="modal-close">&times;</button>
             </div>
             <form id="product-form">
-                <div class="form-group">
-                    <label class="form-label">Product ID</label>
-                    <input type="text" class="form-control" name="id" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Product ID *</label>
+                        <input type="text" class="form-control" name="id" required placeholder="e.g., PROD001">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">HSN Code</label>
+                        <input type="text" class="form-control" name="hsnCode" placeholder="e.g., 1006">
+                    </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Product Name</label>
-                    <input type="text" class="form-control" name="name" required>
+                    <label class="form-label">Product Name *</label>
+                    <input type="text" class="form-control" name="name" required placeholder="Enter product name">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Category</label>
-                    <select class="form-control" name="category" required>
-                        <option value="">Select Category</option>
-                        <option value="Grains">Grains</option>
-                        <option value="Oils">Oils</option>
-                        <option value="Spices">Spices</option>
-                    </select>
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" name="description" rows="2" placeholder="Product description"></textarea>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Price (₹)</label>
-                    <input type="number" class="form-control" name="price" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Category *</label>
+                        <select class="form-control" name="category" required>
+                            <option value="">Select Category</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Supplier</label>
+                        <select class="form-control" name="supplier">
+                            <option value="">Select Supplier</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Stock Quantity</label>
-                    <input type="number" class="form-control" name="stock" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Price (₹) *</label>
+                        <input type="number" class="form-control" name="price" required min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">GST Rate (%) *</label>
+                        <select class="form-control" name="gstRate" required>
+                            <option value="0">0%</option>
+                            <option value="5">5%</option>
+                            <option value="12">12%</option>
+                            <option value="18">18%</option>
+                            <option value="28">28%</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Reorder Level</label>
-                    <input type="number" class="form-control" name="reorderLevel" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">GST Rate (%)</label>
-                    <select class="form-control" name="gstRate" required>
-                        <option value="5">5%</option>
-                        <option value="12">12%</option>
-                        <option value="18">18%</option>
-                        <option value="28">28%</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Stock Quantity *</label>
+                        <input type="number" class="form-control" name="stock" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Reorder Level</label>
+                        <input type="number" class="form-control" name="reorderLevel" min="0" placeholder="Minimum stock level">
+                    </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn--secondary modal-cancel">Cancel</button>
@@ -390,9 +545,47 @@
         </div>
     </div>
 
+    <!-- Customer Modal -->
+    <div class="modal hidden" id="customer-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="customer-modal-title">Add Customer</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="customer-form">
+                <div class="form-group">
+                    <label class="form-label">Customer Name *</label>
+                    <input type="text" class="form-control" name="name" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone *</label>
+                        <input type="tel" class="form-control" name="phone" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Address</label>
+                    <textarea class="form-control" name="address" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">GST Number</label>
+                    <input type="text" class="form-control" name="gstNumber" placeholder="Optional">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn--secondary modal-cancel">Cancel</button>
+                    <button type="submit" class="btn btn--primary">Save Customer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Receipt Modal -->
     <div class="modal hidden" id="receipt-modal">
-        <div class="modal-content">
+        <div class="modal-content receipt-modal-content">
             <div class="modal-header">
                 <h3>Sale Receipt</h3>
                 <button class="modal-close">&times;</button>
@@ -401,8 +594,26 @@
                 <!-- Receipt will be generated here -->
             </div>
             <div class="modal-actions">
-                <button class="btn btn--secondary" onclick="window.print()">Print</button>
+                <button class="btn btn--secondary" id="print-receipt-btn">🖨️ Print</button>
+                <button class="btn btn--secondary" id="email-receipt-btn">📧 Email</button>
                 <button class="btn btn--primary modal-close">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal hidden" id="confirm-modal">
+        <div class="modal-content confirm-modal-content">
+            <div class="modal-header">
+                <h3 id="confirm-title">Confirm Action</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="confirm-body">
+                <p id="confirm-message">Are you sure you want to proceed?</p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn--secondary modal-cancel">Cancel</button>
+                <button class="btn btn--primary" id="confirm-action-btn">Confirm</button>
             </div>
         </div>
     </div>
