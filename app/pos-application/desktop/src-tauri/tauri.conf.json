@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "identifier": "com.tauri.dev",
   "build": {
-    "frontendDist": "../frontend",
+    "frontendDist": "../../frontend",
     "devUrl": "http://localhost:3000",
-    "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build"
+    "beforeDevCommand": "python server.py"
+    
   },
   
   "app": {
@@ -35,5 +35,4 @@
       "icons/icon.ico"
     ]
   }
-
 }
