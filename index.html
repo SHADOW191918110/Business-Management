@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wholesale POS System</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Navigation Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2>WholeSale POS</h2>
+        </div>
+        <div class="sidebar-menu">
+            <button class="menu-item active" data-view="dashboard">
+                <span class="menu-icon">📊</span>
+                Dashboard
+            </button>
+            <button class="menu-item" data-view="pos">
+                <span class="menu-icon">🛒</span>
+                Point of Sale
+            </button>
+            <button class="menu-item" data-view="inventory">
+                <span class="menu-icon">📦</span>
+                Inventory
+            </button>
+            <button class="menu-item" data-view="customers">
+                <span class="menu-icon">👥</span>
+                Customers
+            </button>
+            <button class="menu-item" data-view="suppliers">
+                <span class="menu-icon">🏭</span>
+                Suppliers
+            </button>
+            <button class="menu-item" data-view="orders">
+                <span class="menu-icon">📋</span>
+                Orders
+            </button>
+            <button class="menu-item" data-view="reports">
+                <span class="menu-icon">📈</span>
+                Reports
+            </button>
+            <button class="menu-item" data-view="accounting">
+                <span class="menu-icon">💰</span>
+                Accounting
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="header-content">
+                <h1 id="page-title">Dashboard</h1>
+                <div class="header-actions">
+                    <button class="btn btn--secondary theme-toggle">🌙</button>
+                    <div class="user-info">Admin User</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard View -->
+        <div id="dashboard-view" class="view active">
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-icon">💵</span>
+                        <span class="kpi-label">Total Revenue</span>
+                    </div>
+                    <div class="kpi-value" id="total-revenue">₹24,67,890</div>
+                    <div class="kpi-change positive">+12.5% from last month</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-icon">📦</span>
+                        <span class="kpi-label">Orders Today</span>
+                    </div>
+                    <div class="kpi-value" id="orders-today">147</div>
+                    <div class="kpi-change positive">+8.3% from yesterday</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-icon">👥</span>
+                        <span class="kpi-label">Active Customers</span>
+                    </div>
+                    <div class="kpi-value" id="active-customers">2,847</div>
+                    <div class="kpi-change neutral">+2.1% from last week</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-icon">🏪</span>
+                        <span class="kpi-label">Inventory Value</span>
+                    </div>
+                    <div class="kpi-value" id="inventory-value">₹18,23,450</div>
+                    <div class="kpi-change negative">-1.2% from last month</div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>Sales Performance</h3>
+                        <select class="form-control chart-period">
+                            <option>Last 7 Days</option>
+                            <option>Last 30 Days</option>
+                            <option>Last 3 Months</option>
+                        </select>
+                    </div>
+                    <div class="chart-container" style="position: relative; height: 300px;">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>Recent Orders</h3>
+                        <button class="btn btn--primary btn--sm">View All</button>
+                    </div>
+                    <div class="recent-orders">
+                        <div class="order-item">
+                            <div class="order-info">
+                                <div class="order-id">ORD-2025-0001</div>
+                                <div class="order-customer">Raj Traders Pvt Ltd</div>
+                            </div>
+                            <div class="order-details">
+                                <div class="order-amount">₹45,670</div>
+                                <span class="status status--success">Completed</span>
+                            </div>
+                        </div>
+                        <div class="order-item">
+                            <div class="order-info">
+                                <div class="order-id">ORD-2025-0002</div>
+                                <div class="order-customer">Modern Grocery Store</div>
+                            </div>
+                            <div class="order-details">
+                                <div class="order-amount">₹23,450</div>
+                                <span class="status status--warning">Pending</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- POS View -->
+        <div id="pos-view" class="view">
+            <div class="pos-container">
+                <div class="product-section">
+                    <div class="pos-header">
+                        <input type="text" placeholder="Search products..." class="form-control product-search">
+                        <select class="form-control category-filter">
+                            <option value="">All Categories</option>
+                            <option value="Grains">Grains</option>
+                            <option value="Oils">Oils</option>
+                            <option value="Spices">Spices</option>
+                        </select>
+                    </div>
+                    <div class="product-grid" id="product-grid">
+                        <!-- Products will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <div class="cart-section">
+                    <div class="customer-selection">
+                        <select class="form-control" id="customer-select">
+                            <option value="">Select Customer</option>
+                        </select>
+                    </div>
+                    <div class="cart-items" id="cart-items">
+                        <div class="empty-cart">Cart is empty</div>
+                    </div>
+                    <div class="cart-totals">
+                        <div class="total-row">
+                            <span>Subtotal:</span>
+                            <span id="subtotal">₹0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span>CGST (9%):</span>
+                            <span id="cgst">₹0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span>SGST (9%):</span>
+                            <span id="sgst">₹0.00</span>
+                        </div>
+                        <div class="total-row final-total">
+                            <span>Total:</span>
+                            <span id="total">₹0.00</span>
+                        </div>
+                    </div>
+                    <div class="payment-methods">
+                        <button class="btn btn--primary payment-btn" data-method="cash">Cash</button>
+                        <button class="btn btn--secondary payment-btn" data-method="card">Card</button>
+                        <button class="btn btn--secondary payment-btn" data-method="upi">UPI</button>
+                    </div>
+                    <button class="btn btn--primary btn--full-width checkout-btn" disabled>Complete Sale</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory View -->
+        <div id="inventory-view" class="view">
+            <div class="inventory-header">
+                <div class="inventory-actions">
+                    <button class="btn btn--primary" id="add-product-btn">Add Product</button>
+                    <button class="btn btn--secondary">Export</button>
+                    <button class="btn btn--secondary">Import</button>
+                </div>
+            </div>
+            <div class="inventory-table-container">
+                <table class="inventory-table">
+                    <thead>
+                        <tr>
+                            <th>Product ID</th>
+                            <th>Product Name</th>
+                            <th>Category</th>
+                            <th>Stock</th>
+                            <th>Reorder Level</th>
+                            <th>Status</th>
+                            <th>Price</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-tbody">
+                        <!-- Inventory items will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Customers View -->
+        <div id="customers-view" class="view">
+            <div class="customers-header">
+                <button class="btn btn--primary" id="add-customer-btn">Add Customer</button>
+            </div>
+            <div class="customers-grid" id="customers-grid">
+                <!-- Customer cards will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Suppliers View -->
+        <div id="suppliers-view" class="view">
+            <div class="suppliers-header">
+                <button class="btn btn--primary" id="add-supplier-btn">Add Supplier</button>
+            </div>
+            <div class="suppliers-grid" id="suppliers-grid">
+                <!-- Supplier cards will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Orders View -->
+        <div id="orders-view" class="view">
+            <div class="orders-header">
+                <div class="orders-filters">
+                    <select class="form-control">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <input type="date" class="form-control">
+                </div>
+            </div>
+            <div class="orders-table-container">
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Date</th>
+                            <th>Items</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-tbody">
+                        <!-- Orders will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Reports View -->
+        <div id="reports-view" class="view">
+            <div class="reports-grid">
+                <div class="report-card">
+                    <h3>Sales Report</h3>
+                    <p>Detailed sales analysis and trends</p>
+                    <button class="btn btn--primary">Generate Report</button>
+                </div>
+                <div class="report-card">
+                    <h3>GST Report</h3>
+                    <p>GST compliance and tax calculations</p>
+                    <button class="btn btn--primary">Generate Report</button>
+                </div>
+                <div class="report-card">
+                    <h3>Inventory Report</h3>
+                    <p>Stock levels and movement analysis</p>
+                    <button class="btn btn--primary">Generate Report</button>
+                </div>
+                <div class="report-card">
+                    <h3>Customer Analysis</h3>
+                    <p>Customer behavior and purchase patterns</p>
+                    <button class="btn btn--primary">Generate Report</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accounting View -->
+        <div id="accounting-view" class="view">
+            <div class="accounting-grid">
+                <div class="account-card">
+                    <h3>Cash Account</h3>
+                    <div class="account-balance">₹2,45,670</div>
+                    <div class="account-change positive">+₹12,450 today</div>
+                </div>
+                <div class="account-card">
+                    <h3>Bank Account</h3>
+                    <div class="account-balance">₹8,67,890</div>
+                    <div class="account-change positive">+₹45,230 today</div>
+                </div>
+                <div class="account-card">
+                    <h3>Accounts Receivable</h3>
+                    <div class="account-balance">₹1,23,450</div>
+                    <div class="account-change negative">+₹8,900 pending</div>
+                </div>
+                <div class="account-card">
+                    <h3>Accounts Payable</h3>
+                    <div class="account-balance">₹87,650</div>
+                    <div class="account-change neutral">₹42,500 due</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <div class="modal hidden" id="product-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="product-modal-title">Add Product</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="product-form">
+                <div class="form-group">
+                    <label class="form-label">Product ID</label>
+                    <input type="text" class="form-control" name="id" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Product Name</label>
+                    <input type="text" class="form-control" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select class="form-control" name="category" required>
+                        <option value="">Select Category</option>
+                        <option value="Grains">Grains</option>
+                        <option value="Oils">Oils</option>
+                        <option value="Spices">Spices</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Price (₹)</label>
+                    <input type="number" class="form-control" name="price" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Stock Quantity</label>
+                    <input type="number" class="form-control" name="stock" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Reorder Level</label>
+                    <input type="number" class="form-control" name="reorderLevel" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">GST Rate (%)</label>
+                    <select class="form-control" name="gstRate" required>
+                        <option value="5">5%</option>
+                        <option value="12">12%</option>
+                        <option value="18">18%</option>
+                        <option value="28">28%</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn--secondary modal-cancel">Cancel</button>
+                    <button type="submit" class="btn btn--primary">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div class="modal hidden" id="receipt-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Sale Receipt</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="receipt-content" id="receipt-content">
+                <!-- Receipt will be generated here -->
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn--secondary" onclick="window.print()">Print</button>
+                <button class="btn btn--primary modal-close">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
