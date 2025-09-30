@@ -1,5 +1,4 @@
 // IndexedDB Database Management
-// Check if backend is available
 
 
 class POSApplicationWithBackend extends POSApplication {
@@ -263,6 +262,32 @@ class POSApplication {
                     createdAt: "2025-09-29T00:00:00Z",
                     updatedAt: "2025-09-29T00:00:00Z"
                 }
+
+
+// Check if backend is available
+async function checkBackendConnection() {
+                    try {
+                        const response = await fetch(`${API_CONFIG.baseURL}/health`);
+                        return response.ok;
+                    } catch (error) {
+                        console.warn('Backend not available, running in offline mode');
+                        return false;
+                    }
+                }
+
+// Initialize application based on backend availability
+document.addEventListener('DOMContentLoaded', async () => {
+                    const backendAvailable = await checkBackendConnection();
+
+                    if (backendAvailable) {
+                        console.log('✅ Connected to Rust backend');
+                        window.posApp = new POSApplicationWithBackend();
+                    } else {
+                        console.log('📦 Running in offline mode');
+                        window.posApp = new POSApplication();
+                    }
+                });
+
             ],
             customers: [
                 {
@@ -1709,27 +1734,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Global functions for onclick handlers
 window.app = app;
-
-
-async function checkBackendConnection() {
-    try {
-        const response = await fetch(`${API_CONFIG.baseURL}/health`);
-        return response.ok;
-    } catch (error) {
-        console.warn('Backend not available, running in offline mode');
-        return false;
-    }
-}
-
-// Initialize application based on backend availability
-document.addEventListener('DOMContentLoaded', async () => {
-    const backendAvailable = await checkBackendConnection();
-
-    if (backendAvailable) {
-        console.log('✅ Connected to Rust backend');
-        window.posApp = new POSApplicationWithBackend();
-    } else {
-        console.log('📦 Running in offline mode');
-        window.posApp = new POSApplication();
-    }
-});
