@@ -2,6 +2,7 @@ use anyhow::Result;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tracing::info;
+use tracing_subscriber;
 
 mod database;
 mod server;
@@ -9,12 +10,11 @@ mod handlers;
 mod frontend;
 
 use database::Database;
-use server::start_server;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Initialize logging
-    tracing_subscriber::init();
+    // Initialize logging - FIXED
+    tracing_subscriber::fmt::init();
     
     info!("🚀 Starting Wholesale POS System...");
     
@@ -32,7 +32,7 @@ async fn main() -> Result<()> {
         db_guard.seed_data().await?;
     }
     
-    // Start web server
+    // Start web server - FIXED
     info!("🌐 Starting web server...");
     info!("📊 Dashboard: http://localhost:3030");
     info!("💰 POS System: http://localhost:3030/pos");
@@ -40,7 +40,7 @@ async fn main() -> Result<()> {
     info!("");
     info!("🎉 System ready! Open your browser to http://localhost:3030");
     
-    start_server(db).await?;
+    server::start_server(db).await?;
     
     Ok(())
 }
