@@ -205,7 +205,7 @@ pub fn get_main_page() -> &'static str {
                 } else {
                     const salesHtml = sales.slice(0, 10).map(sale => `
                         <div style="border-bottom: 1px solid #eee; padding: 1rem 0;">
-                            <div style="display: flex; justify-content: between; align-items: center;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div>
                                     <strong>Sale #${sale.id.substring(0, 8)}</strong>
                                     <div style="color: #666; font-size: 0.9rem;">

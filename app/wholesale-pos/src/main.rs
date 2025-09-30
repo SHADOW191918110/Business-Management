@@ -23,11 +23,14 @@ async fn main() -> Result<()> {
     let db = Arc::new(Mutex::new(Database::new("./pos_data.db").await?));
     
     // Initialize tables
-    db.lock().await.init_tables().await?;
-    info!("✅ Database ready!");
-    
-    // Add sample data if empty
-    db.lock().await.seed_data().await?;
+    {
+        let mut db_guard = db.lock().await;
+        db_guard.init_tables().await?;
+        info!("✅ Database ready!");
+        
+        // Add sample data if empty
+        db_guard.seed_data().await?;
+    }
     
     // Start web server
     info!("🌐 Starting web server...");

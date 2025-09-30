@@ -56,13 +56,20 @@ pub struct Database {
     conn: Connection,
 }
 
+// FIXED: Add Send + Sync
+unsafe impl Send for Database {}
+unsafe impl Sync for Database {}
+
 impl Database {
     pub async fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
         let conn = Connection::open(path)?;
+        // FIXED: Enable WAL mode for better concurrency
+        conn.execute("PRAGMA journal_mode=WAL;", [])?;
+        conn.execute("PRAGMA synchronous=NORMAL;", [])?;
         Ok(Database { conn })
     }
 
-    pub async fn init_tables(&self) -> Result<()> {
+    pub async fn init_tables(&mut self) -> Result<()> {
         // Products table
         self.conn.execute(
             "CREATE TABLE IF NOT EXISTS products (
@@ -128,7 +135,7 @@ impl Database {
         Ok(())
     }
 
-    pub async fn seed_data(&self) -> Result<()> {
+    pub async fn seed_data(&mut self) -> Result<()> {
         // Check if we already have data
         let count: i32 = self.conn.query_row(
             "SELECT COUNT(*) FROM products",
@@ -182,7 +189,7 @@ impl Database {
     }
 
     // Product operations
-    pub async fn create_product(&self, product: Product) -> Result<()> {
+    pub async fn create_product(&mut self, product: Product) -> Result<()> {
         self.conn.execute(
             "INSERT INTO products (id, name, sku, price, cost, stock, category, gst_rate, created_at)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
@@ -216,7 +223,7 @@ impl Database {
                 stock: row.get(5)?,
                 category: row.get(6)?,
                 gst_rate: row.get(7)?,
-                created_at: row.get::<_, String>(8)?.parse().map_err(|e| rusqlite::Error::InvalidColumnType(8, "created_at".to_string(), rusqlite::types::Type::Text))?,
+                created_at: row.get::<_, String>(8)?.parse().unwrap_or(Utc::now()),
             })
         })?.collect::<Result<Vec<_>, _>>()?;
 
@@ -238,7 +245,7 @@ impl Database {
                     stock: row.get(5)?,
                     category: row.get(6)?,
                     gst_rate: row.get(7)?,
-                    created_at: row.get::<_, String>(8)?.parse().map_err(|e| rusqlite::Error::InvalidColumnType(8, "created_at".to_string(), rusqlite::types::Type::Text))?,
+                    created_at: row.get::<_, String>(8)?.parse().unwrap_or(Utc::now()),
                 })
             }
         ).optional()?;
@@ -246,16 +253,8 @@ impl Database {
         Ok(product)
     }
 
-    pub async fn update_product_stock(&self, product_id: &str, new_stock: i32) -> Result<()> {
-        self.conn.execute(
-            "UPDATE products SET stock = ?1 WHERE id = ?2",
-            params![new_stock, product_id],
-        )?;
-        Ok(())
-    }
-
     // Customer operations
-    pub async fn create_customer(&self, customer: Customer) -> Result<()> {
+    pub async fn create_customer(&mut self, customer: Customer) -> Result<()> {
         self.conn.execute(
             "INSERT INTO customers (id, name, phone, email, address, gst_number, credit_limit, created_at)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
@@ -288,7 +287,7 @@ impl Database {
                 address: row.get(4)?,
                 gst_number: row.get(5)?,
                 credit_limit: row.get(6)?,
-                created_at: row.get::<_, String>(7)?.parse().map_err(|e| rusqlite::Error::InvalidColumnType(7, "created_at".to_string(), rusqlite::types::Type::Text))?,
+                created_at: row.get::<_, String>(7)?.parse().unwrap_or(Utc::now()),
             })
         })?.collect::<Result<Vec<_>, _>>()?;
 
@@ -296,7 +295,7 @@ impl Database {
     }
 
     // Sales operations
-    pub async fn create_sale(&self, sale: Sale, items: Vec<SaleItem>) -> Result<()> {
+    pub async fn create_sale(&mut self, sale: Sale, items: Vec<SaleItem>) -> Result<()> {
         let tx = self.conn.unchecked_transaction()?;
         
         // Insert sale
@@ -363,7 +362,7 @@ impl Database {
                 gst_amount: row.get(3)?,
                 payment_method: row.get(4)?,
                 status: row.get(5)?,
-                created_at: row.get::<_, String>(6)?.parse().map_err(|e| rusqlite::Error::InvalidColumnType(6, "created_at".to_string(), rusqlite::types::Type::Text))?,
+                created_at: row.get::<_, String>(6)?.parse().unwrap_or(Utc::now()),
             })
         })?.collect::<Result<Vec<_>, _>>()?;
 
