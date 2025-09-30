@@ -1,5 +1,315 @@
 // IndexedDB Database Management
+// POS Application with Rust Backend Integration
+class POSApplication {
+    constructor() {
+        this.isOnline = navigator.onLine;
+        this.syncInProgress = false;
 
+        // Initialize API clients
+        this.productsAPI = window.productsAPI;
+        this.salesAPI = window.salesAPI;
+        this.customersAPI = window.customersAPI;
+
+        // Initialize application
+        this.init();
+    }
+
+    async init() {
+        try {
+            this.showLoadingScreen();
+
+            // Test backend connection
+            await this.testBackendConnection();
+
+            // Load initial data
+            await this.loadInitialData();
+
+            // Setup event listeners
+            this.setupEventListeners();
+
+            // Initialize views
+            this.initializeViews();
+
+            // Setup offline sync
+            this.setupOfflineSync();
+
+            this.hideLoadingScreen();
+            this.showView('dashboard');
+
+        } catch (error) {
+            console.error('Failed to initialize application:', error);
+            this.showErrorMessage('Failed to connect to server. Running in offline mode.');
+            this.hideLoadingScreen();
+            this.showView('dashboard');
+        }
+    }
+
+    /**
+     * Test connection to Rust backend
+     */
+    async testBackendConnection() {
+        try {
+            // Try to fetch a simple endpoint to test connection
+            await window.apiClient.get('/products?limit=1');
+            this.updateConnectionStatus(true);
+            console.log('✅ Backend connection successful');
+        } catch (error) {
+            this.updateConnectionStatus(false);
+            console.warn('⚠️ Backend connection failed, using offline mode');
+            throw error;
+        }
+    }
+
+    /**
+     * Load initial data from backend or cache
+     */
+    async loadInitialData() {
+        try {
+            // Load products
+            this.products = await this.productsAPI.getProducts({ limit: 100 });
+
+            // Load customers
+            this.customers = await this.customersAPI.getCustomers({ limit: 100 });
+
+            // Load recent sales
+            this.recentSales = await this.salesAPI.getSales({ limit: 50 });
+
+            console.log('✅ Initial data loaded successfully');
+        } catch (error) {
+            console.warn('⚠️ Failed to load initial data:', error);
+            // Load from cache/IndexedDB as fallback
+            await this.loadCachedData();
+        }
+    }
+
+    /**
+     * Load cached data for offline mode
+     */
+    async loadCachedData() {
+        try {
+            // This would load from IndexedDB cache
+            this.products = await this.loadFromCache('products') || [];
+            this.customers = await this.loadFromCache('customers') || [];
+            this.recentSales = await this.loadFromCache('sales') || [];
+
+            console.log('📦 Loaded cached data for offline use');
+        } catch (error) {
+            console.error('Failed to load cached data:', error);
+            // Initialize with empty arrays
+            this.products = [];
+            this.customers = [];
+            this.recentSales = [];
+        }
+    }
+
+    /**
+     * Handle product operations through API
+     */
+    async handleAddProduct(productData) {
+        try {
+            this.showLoading('Adding product...');
+
+            const newProduct = await this.productsAPI.createProduct(productData);
+
+            // Update local state
+            this.products.push(newProduct);
+
+            // Refresh product display
+            this.renderProducts();
+
+            // Close modal
+            this.closeModal('add-product-modal');
+
+            this.hideLoading();
+
+        } catch (error) {
+            this.hideLoading();
+            this.showErrorMessage(`Failed to add product: ${error.message}`);
+        }
+    }
+
+    async handleUpdateProduct(id, productData) {
+        try {
+            this.showLoading('Updating product...');
+
+            const updatedProduct = await this.productsAPI.updateProduct(id, productData);
+
+            // Update local state
+            const index = this.products.findIndex(p => p.id === id);
+            if (index !== -1) {
+                this.products[index] = updatedProduct;
+            }
+
+            // Refresh display
+            this.renderProducts();
+            this.closeModal('edit-product-modal');
+
+            this.hideLoading();
+
+        } catch (error) {
+            this.hideLoading();
+            this.showErrorMessage(`Failed to update product: ${error.message}`);
+        }
+    }
+
+    async handleDeleteProduct(id) {
+        if (!confirm('Are you sure you want to delete this product?')) {
+            return;
+        }
+
+        try {
+            this.showLoading('Deleting product...');
+
+            await this.productsAPI.deleteProduct(id);
+
+            // Remove from local state
+            this.products = this.products.filter(p => p.id !== id);
+
+            // Refresh display
+            this.renderProducts();
+
+            this.hideLoading();
+
+        } catch (error) {
+            this.hideLoading();
+            this.showErrorMessage(`Failed to delete product: ${error.message}`);
+        }
+    }
+
+    /**
+     * Handle POS sale through API
+     */
+    async handleProcessSale() {
+        if (this.cart.length === 0) {
+            this.showErrorMessage('Cart is empty');
+            return;
+        }
+
+        try {
+            this.showLoading('Processing sale...');
+
+            const saleData = {
+                items: this.cart.map(item => ({
+                    product_id: item.id,
+                    quantity: item.quantity,
+                    price: item.price,
+                    gst_rate: item.gstRate
+                })),
+                customer_id: this.selectedCustomer?.id || null,
+                payment_method: this.selectedPaymentMethod,
+                store_state: 'KR', // Korean state code
+                customer_state: this.selectedCustomer?.state || 'KR'
+            };
+
+            const sale = await this.salesAPI.processSale(saleData);
+
+            // Clear cart
+            this.cart = [];
+            this.selectedCustomer = null;
+            this.selectedPaymentMethod = 'cash';
+
+            // Update UI
+            this.renderCart();
+            this.renderPOSProducts();
+
+            // Show receipt
+            this.showReceipt(sale);
+
+            this.hideLoading();
+
+        } catch (error) {
+            this.hideLoading();
+            this.showErrorMessage(`Failed to process sale: ${error.message}`);
+        }
+    }
+
+    /**
+     * Setup offline synchronization
+     */
+    setupOfflineSync() {
+        // Monitor online/offline status
+        window.addEventListener('online', () => {
+            this.isOnline = true;
+            this.updateConnectionStatus(true);
+            this.syncOfflineData();
+        });
+
+        window.addEventListener('offline', () => {
+            this.isOnline = false;
+            this.updateConnectionStatus(false);
+        });
+
+        // Periodic sync attempt
+        setInterval(() => {
+            if (this.isOnline && !this.syncInProgress) {
+                this.syncOfflineData();
+            }
+        }, 5 * 60 * 1000); // Every 5 minutes
+    }
+
+    /**
+     * Sync offline data with backend
+     */
+    async syncOfflineData() {
+        if (this.syncInProgress) return;
+
+        this.syncInProgress = true;
+
+        try {
+            console.log('🔄 Starting offline data sync...');
+
+            // Sync offline sales
+            await this.syncOfflineSales();
+
+            // Sync offline product changes
+            await this.syncOfflineProducts();
+
+            console.log('✅ Offline data sync completed');
+            this.showNotification('Data synchronized successfully', 'success');
+
+        } catch (error) {
+            console.error('Sync failed:', error);
+            this.showNotification('Sync failed - will retry later', 'warning');
+        } finally {
+            this.syncInProgress = false;
+        }
+    }
+
+    /**
+     * Update connection status indicator
+     */
+    updateConnectionStatus(isOnline) {
+        const indicator = document.getElementById('connection-status');
+        if (indicator) {
+            indicator.className = isOnline ? 'online' : 'offline';
+            indicator.textContent = isOnline ? 'Online' : 'Offline';
+        }
+    }
+
+    /**
+     * Show loading screen
+     */
+    showLoadingScreen() {
+        const loader = document.getElementById('loading-screen');
+        if (loader) {
+            loader.style.display = 'flex';
+        }
+    }
+
+    hideLoadingScreen() {
+        const loader = document.getElementById('loading-screen');
+        if (loader) {
+            loader.style.display = 'none';
+        }
+    }
+
+    // ... rest of the existing methods remain the same
+}
+
+// Initialize the application when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.posApp = new POSApplication();
+});
 
 class POSApplicationWithBackend extends POSApplication {
     constructor() {
@@ -1734,3 +2044,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Global functions for onclick handlers
 window.app = app;
+
+
+
+
+
+
