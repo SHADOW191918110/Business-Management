@@ -1,23 +1,32 @@
-use actix_web::{web, App, HttpServer, Result, middleware::Logger};
+use actix_web::{web, App, HttpServer};
 use actix_cors::Cors;
-use sqlx::postgres::PgPoolOptions;
 use tracing::{info, error};
 use std::env;
 
+pub mod products;
+pub mod customers;
+pub mod suppliers;
+pub mod sales;
+pub mod auth;
+pub mod settings;
+
+
+// Re-export components from other files
 mod config;
-mod handlers;
-mod models;
-mod services;
-mod middleware;
-mod utils;
+pub use config::Settings;
 
 use config::database::create_pool;
-use handlers::{products, customers, suppliers, sales, auth, settings};
+use crate::products;
+use crate::customers;
+use crate::suppliers;
+use crate::sales;
+use crate::auth;
+use crate::settings;
 
 #[actix_web::main]
-async fn main() -> Result<()> {
+async fn main() -> std::io::Result<()> {
     // Initialize logging
-    tracing_subscriber::init();
+    tracing_subscriber::fmt::init();
     
     // Load environment variables
     dotenv::dotenv().ok();
@@ -56,7 +65,7 @@ async fn main() -> Result<()> {
         App::new()
             .app_data(web::Data::new(db_pool.clone()))
             .wrap(cors)
-            .wrap(Logger::default())
+            .wrap(actix_web::middleware::Logger::default())
             .service(
                 web::scope("/api/v1")
                     // Authentication routes
@@ -115,4 +124,19 @@ async fn main() -> Result<()> {
     .bind(&bind_address)?
     .run()
     .await
+}
+
+// Basic settings configuration structure
+pub struct Settings {
+    pub database_url: String,
+    pub server_port: u16,
+}
+
+impl Settings {
+    pub fn new() -> Self {
+        Settings {
+            database_url: String::from("localhost"),
+            server_port: 8080,
+        }
+    }
 }
