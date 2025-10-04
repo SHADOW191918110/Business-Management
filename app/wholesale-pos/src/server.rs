@@ -4,10 +4,46 @@ use rusqlite::{Connection, params, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use uuid::Uuid;
-use crate::Database;  // Import your Database struct from the main module or lib
-use anyhow::Result;
+use crate::Database as OtherDatabase;  // Import your Database struct from the main module or lib
 use tokio::net::TcpListener;
 use tokio::io::{self, AsyncReadExt, AsyncWriteExt};
+use std::sync::Arc;
+use anyhow::Result;
+use tokio::sync::Mutex;
+use warp::{Filter, Reply, Rejection};
+use crate::Database;  // Assuming Database is in lib.rs or another module; adjust if needed
+
+pub async fn start_server(db: Arc<Mutex<Database>>) -> Result<()> {
+    // Define API routes (example: GET /products)
+    let products_route = warp::path("products")
+        .and(warp::get())
+        .and_then({
+            let db = db.clone();  // Clone for this route
+            move || {
+                let db = db.clone();
+                async move {
+                    let db_guard = db.lock().await;
+                    match db_guard.get_products().await {
+                        Ok(products) => Ok(warp::reply::json(&products)),
+                        Err(e) => Err(warp::reject::custom(e)),
+                    }
+                }
+            }
+        });
+
+    // Add more routes here (e.g., POST /sales, etc.)
+
+    // Start the server
+    println!("HTTP Server listening on 127.0.0.1:8080");
+    warp::serve(products_route)
+        .run(([127, 0, 0, 1], 8080))
+        .await;
+
+    Ok(())
+}
+
+// Rest of your Database impl remains the same (structs, methods like get_products, etc.)
+// Ensure Database methods are async and use &self or &mut self appropriately for Mutex guard.
 
 
 
