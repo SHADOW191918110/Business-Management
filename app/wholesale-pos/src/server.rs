@@ -4,6 +4,13 @@ use rusqlite::{Connection, params, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use uuid::Uuid;
+use crate::Database;  // Import your Database struct from the main module or lib
+use anyhow::Result;
+use tokio::net::TcpListener;
+use tokio::io::{self, AsyncReadExt, AsyncWriteExt};
+
+
+
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Product {
@@ -59,6 +66,40 @@ pub struct Database {
 // FIXED: Add Send + Sync
 unsafe impl Send for Database {}
 unsafe impl Sync for Database {}
+
+pub async fn start_server(db: Database) -> Result<()> {
+    // Bind to a local address (change to your desired port)
+    let listener = TcpListener::bind("127.0.0.1:8080").await?;
+    println!("Server listening on 127.0.0.1:8080");
+
+    loop {
+        // Accept incoming connections
+        let (mut socket, addr) = listener.accept().await?;
+        println!("New connection from {}", addr);
+
+        // Spawn a task to handle each connection (using the shared Database)
+        tokio::spawn(async move {
+            // Example: Read data from client and echo it back
+            let mut buf = vec![0; 1024];
+            match socket.read(&mut buf).await {
+                Ok(n) if n == 0 => return,  // Connection closed
+                Ok(n) => {
+                    // Process data (e.g., query the database here)
+                    // For demo: Echo back the received data
+                    if let Err(e) = socket.write_all(&buf[0..n]).await {
+                        eprintln!("Failed to write to socket: {}", e);
+                    }
+
+                    // Example DB interaction: Get products (adapt to your needs)
+                    if let Ok(products) = db.get_products().await {
+                        println!("Products fetched: {:?}", products);
+                    }
+                }
+                Err(e) => eprintln!("Failed to read from socket: {}", e),
+            }
+        });
+    }
+}
 
 impl Database {
     pub async fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
