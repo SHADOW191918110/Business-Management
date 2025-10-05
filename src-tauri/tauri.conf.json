@@ -1,160 +1,31 @@
 {
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "POS-App",
+  "version": "1.0.0",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
-    "devPath": "http://localhost:1420",
-    "distDir": "../dist",
-    "withGlobalTauri": false
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../dist"
   },
-  "package": {
-    "productName": "POS-App",
-    "version": "1.0.0"
-  },
-  "tauri": {
-    "allowlist": {
-      "all": false,
-      "shell": {
-        "all": false,
-        "open": true
-      },
-      "window": {
-        "all": false,
-        "center": true,
-        "close": true,
-        "create": true,
-        "hide": true,
-        "maximize": true,
-        "minimize": true,
-        "resizable": true,
-        "setAlwaysOnTop": true,
-        "setDecorations": true,
-        "setFocus": true,
-        "setFullscreen": true,
-        "setIcon": true,
-        "setMaximizable": true,
-        "setMinimizable": true,
-        "setPosition": true,
-        "setResizable": true,
-        "setSize": true,
-        "setSkipTaskbar": true,
-        "setTitle": true,
-        "show": true,
-        "startDragging": true,
-        "unmaximize": true,
-        "unminimize": true
-      },
-      "fs": {
-        "all": false,
-        "readFile": true,
-        "writeFile": true,
-        "readDir": true,
-        "createDir": true,
-        "removeDir": true,
-        "removeFile": true,
-        "copyFile": true,
-        "exists": true,
-        "scope": ["$APPDATA/pos-app/*", "$RESOURCE/*", "$TEMP/*", "$DOCUMENT/*"]
-      },
-      "path": {
-        "all": true
-      },
-      "os": {
-        "all": true
-      },
-      "dialog": {
-        "all": true
-      },
-      "notification": {
-        "all": true
-      },
-      "http": {
-        "all": true,
-        "request": true,
-        "scope": ["http://localhost:3000/*", "https://*/*"]
-      },
-      "globalShortcut": {
-        "all": true
-      }
-    },
-    "bundle": {
-      "active": true,
-      "targets": "all",
-      "identifier": "com.pos-app.dev",
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ],
-      "resources": [
-        "assets/*"
-      ],
-      "copyright": "© 2024 POS-App. All rights reserved.",
-      "category": "Business",
-      "shortDescription": "Professional Point of Sale System",
-      "longDescription": "A modern, cross-platform Point of Sale system built with Tauri and MongoDB, featuring a professional Japanese-inspired interface design. Perfect for retail businesses of all sizes.",
-      "deb": {
-        "depends": [
-          "libwebkit2gtk-4.0-37",
-          "libgtk-3-0",
-          "libayatana-appindicator3-1"
-        ],
-        "section": "Office"
-      },
-      "macOS": {
-        "frameworks": [],
-        "minimumSystemVersion": "10.13",
-        "exceptionDomain": "localhost",
-        "entitlements": null,
-        "providerShortName": null,
-        "signingIdentity": null
-      },
-      "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "timestampUrl": "",
-        "wix": {
-          "language": ["en-US", "ja-JP"],
-          "template": null
-        }
-      }
-    },
+  "app": {
     "security": {
-      "csp": "default-src 'self'; img-src 'self' asset: https://asset.localhost https://via.placeholder.com data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; connect-src 'self' ipc: asset: http://localhost:3000 http://localhost:27017 ws://localhost:*; worker-src 'self';"
+      "csp": null
     },
     "windows": [
       {
-        "fullscreen": false,
-        "resizable": true,
         "title": "POS-App",
-        "width": 1400,
-        "height": 900,
-        "minWidth": 1200,
-        "minHeight": 700,
+        "width": 1280,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false,
         "center": true,
-        "theme": "Light",
-        "titleBarStyle": "Visible",
-        "decorations": true,
-        "transparent": false,
-        "alwaysOnTop": false,
-        "skipTaskbar": false,
-        "fileDropEnabled": false
+        "decorations": true
       }
-    ],
-    "systemTray": {
-      "iconPath": "icons/icon.ico",
-      "iconAsTemplate": true,
-      "menuOnLeftClick": false,
-      "tooltip": "POS-App"
-    },
-    "updater": {
-      "active": false,
-      "endpoints": [
-        "https://releases.pos-app.com/{{target}}/{{arch}}/{{current_version}}"
-      ],
-      "dialog": true,
-      "pubkey": ""
-    }
-  }
+    ]
+  },
+  "bundle": {
+    "identifier": "net.example.posapp"
+  },
+  "plugins": {}
 }
