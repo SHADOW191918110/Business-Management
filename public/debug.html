@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional POS System - Debug</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Debug styles */
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 9999;
+            max-width: 300px;
+        }
+        .debug-toggle {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 9999;
+        }
+        .error-display {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fee;
+            border: 2px solid #f87171;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            z-index: 10000;
+            max-width: 500px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Debug Info -->
+    <div id="debug-info" class="debug-info" style="display: none;">
+        <div><strong>Debug Console</strong></div>
+        <div id="debug-status">Initializing...</div>
+        <div id="debug-server">Server: Not checked</div>
+        <div id="debug-auth">Auth: Not attempted</div>
+    </div>
+    
+    <!-- Debug Toggle -->
+    <button id="debug-toggle" class="debug-toggle" onclick="toggleDebug()">Debug</button>
+    
+    <!-- Error Display -->
+    <div id="error-display" class="error-display">
+        <h3>Application Error</h3>
+        <div id="error-message"></div>
+        <button onclick="hideError()">Close</button>
+        <button onclick="window.location.reload()">Reload</button>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <p id="loading-text">Loading POS System...</p>
+        <div style="margin-top: 20px; font-size: 12px; color: #94a3b8;">
+            <div id="loading-status">Initializing application...</div>
+        </div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-screen hidden">
+        <div class="login-container">
+            <div class="login-header">
+                <i class="fas fa-cash-register"></i>
+                <h1>Professional POS System</h1>
+                <p>Industrial Grade Point of Sale Solution</p>
+            </div>
+            <form id="login-form" class="login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" value="admin" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" value="admin123" required>
+                </div>
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </form>
+            <div class="demo-credentials">
+                <p><strong>Demo Credentials:</strong></p>
+                <p>Username: admin | Password: admin123</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="main-app" class="main-app hidden">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <i class="fas fa-cash-register"></i>
+                <h1>Professional POS</h1>
+            </div>
+            <div class="header-center">
+                <div class="search-container">
+                    <input type="text" id="global-search" placeholder="Search products, customers...">
+                    <i class="fas fa-search"></i>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="user-info">
+                    <span id="current-user">Admin User</span>
+                    <button id="logout-btn" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="main-nav">
+            <button class="nav-btn active" data-section="pos">
+                <i class="fas fa-cash-register"></i>
+                <span>Point of Sale</span>
+            </button>
+            <button class="nav-btn" data-section="inventory">
+                <i class="fas fa-boxes"></i>
+                <span>Inventory</span>
+            </button>
+            <button class="nav-btn" data-section="customers">
+                <i class="fas fa-users"></i>
+                <span>Customers</span>
+            </button>
+            <button class="nav-btn" data-section="reports">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports</span>
+            </button>
+            <button class="nav-btn" data-section="settings">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- POS Section -->
+            <section id="pos-section" class="content-section active">
+                <div class="pos-layout">
+                    <div class="pos-left">
+                        <div class="product-categories">
+                            <button class="category-btn active" data-category="all">All</button>
+                            <button class="category-btn" data-category="electronics">Electronics</button>
+                            <button class="category-btn" data-category="clothing">Clothing</button>
+                            <button class="category-btn" data-category="food">Food & Beverage</button>
+                            <button class="category-btn" data-category="books">Books</button>
+                        </div>
+                        <div class="product-grid" id="product-grid">
+                            <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #94a3b8;">
+                                <i class="fas fa-box" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+                                <p>No products loaded yet</p>
+                                <button onclick="testServerConnection()" class="btn btn-primary">Test Server Connection</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pos-right">
+                        <div class="cart-section">
+                            <h3>Current Sale</h3>
+                            <div class="cart-items" id="cart-items">
+                                <div style="text-align: center; padding: 20px; color: #94a3b8;">
+                                    <p>Cart is empty</p>
+                                </div>
+                            </div>
+                            <div class="cart-summary">
+                                <div class="summary-row">
+                                    <span>Subtotal:</span>
+                                    <span id="subtotal">₹0.00</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Tax (18%):</span>
+                                    <span id="tax">₹0.00</span>
+                                </div>
+                                <div class="summary-row total">
+                                    <span>Total:</span>
+                                    <span id="total">₹0.00</span>
+                                </div>
+                            </div>
+                            <div class="cart-actions">
+                                <button id="clear-cart" class="btn btn-secondary">
+                                    <i class="fas fa-trash"></i> Clear
+                                </button>
+                                <button id="process-payment" class="btn btn-primary">
+                                    <i class="fas fa-credit-card"></i> Pay Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Other sections remain the same but simplified for debugging -->
+            <section id="inventory-section" class="content-section">
+                <div class="section-header">
+                    <h2>Inventory Management</h2>
+                    <button id="add-product-btn" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Product
+                    </button>
+                </div>
+                <div style="text-align: center; padding: 40px; color: #94a3b8;">
+                    <p>Inventory section - Debug mode</p>
+                </div>
+            </section>
+
+            <section id="customers-section" class="content-section">
+                <div class="section-header">
+                    <h2>Customer Management</h2>
+                    <button id="add-customer-btn" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i> Add Customer
+                    </button>
+                </div>
+                <div style="text-align: center; padding: 40px; color: #94a3b8;">
+                    <p>Customers section - Debug mode</p>
+                </div>
+            </section>
+
+            <section id="reports-section" class="content-section">
+                <div class="section-header">
+                    <h2>Sales Reports & Analytics</h2>
+                </div>
+                <div style="text-align: center; padding: 40px; color: #94a3b8;">
+                    <p>Reports section - Debug mode</p>
+                </div>
+            </section>
+
+            <section id="settings-section" class="content-section">
+                <div class="section-header">
+                    <h2>System Settings</h2>
+                </div>
+                <div style="text-align: center; padding: 40px; color: #94a3b8;">
+                    <p>Settings section - Debug mode</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Debug functions
+        function toggleDebug() {
+            const debug = document.getElementById('debug-info');
+            debug.style.display = debug.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-display');
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error-display').style.display = 'none';
+        }
+
+        function updateDebugStatus(status) {
+            document.getElementById('debug-status').textContent = status;
+        }
+
+        function updateLoadingStatus(status) {
+            document.getElementById('loading-status').textContent = status;
+        }
+
+        async function testServerConnection() {
+            updateLoadingStatus('Testing server connection...');
+            try {
+                const response = await fetch('/api/auth/bootstrap', { method: 'POST' });
+                const data = await response.json();
+                alert('Server connection successful! Response: ' + JSON.stringify(data));
+                document.getElementById('debug-server').textContent = 'Server: Connected';
+            } catch (error) {
+                alert('Server connection failed: ' + error.message);
+                document.getElementById('debug-server').textContent = 'Server: Failed - ' + error.message;
+                showError('Cannot connect to server. Make sure the backend is running on port 3000.');
+            }
+        }
+
+        // Error handling
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+            showError('JavaScript Error: ' + e.error.message);
+            updateDebugStatus('Error: ' + e.error.message);
+        });
+
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('Unhandled promise rejection:', e.reason);
+            showError('Promise Error: ' + e.reason);
+            updateDebugStatus('Promise Error: ' + e.reason);
+        });
+    </script>
+
+    <!-- Load the debug version of app.js -->
+    <script src="js/app-debug.js"></script>
+</body>
+</html>
