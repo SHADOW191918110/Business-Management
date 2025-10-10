@@ -1,4 +1,3 @@
-// Reports UI
 const Reports = (() => {
   const els = {
     todaySales: document.getElementById('today-sales'),
@@ -9,24 +8,35 @@ const Reports = (() => {
   };
 
   function renderRecent(list) {
+    if (!list || list.length === 0) {
+        els.list.innerHTML = `<p style="color: var(--color-text-secondary);">No recent transactions.</p>`;
+        return;
+    }
     els.list.innerHTML = list.map(t => `
-      <div class="trx">
-        <div><strong>#${t._id.slice(-6)}</strong> • ₹${t.total.toFixed(2)} • ${new Date(t.createdAt).toLocaleTimeString()}</div>
-        <div>${t.items.map(i => `${i.quantity}x ${i.name}`).join(', ')}</div>
+      <div class="summary-row">
+        <span>#${t._id.slice(-6)} - ${new Date(t.createdAt).toLocaleTimeString()}</span>
+        <strong>₹${t.total.toFixed(2)}</strong>
       </div>
     `).join('');
   }
 
+  async function load() {
+    try {
+        const { data } = await API.getDashboard();
+        els.todaySales.textContent = `₹${data.todaySales.toFixed(2)}`;
+        els.todayTransactions.textContent = data.todayTransactions;
+        els.totalProducts.textContent = data.totalProducts;
+        els.totalCustomers.textContent = data.totalCustomers;
+        renderRecent(data.recent || []);
+    } catch (err) {
+        console.error("Failed to load reports:", err);
+    }
+  }
+  
   return {
-    async load() {
-      const { data } = await API.getDashboard();
-      els.todaySales.textContent = `₹${data.todaySales.toFixed(2)}`;
-      els.todayTransactions.textContent = data.todayTransactions;
-      els.totalProducts.textContent = data.totalProducts;
-      els.totalCustomers.textContent = data.totalCustomers;
-      renderRecent(data.recent || []);
+    load,
+    init() {
+        return load();
     }
   };
 })();
-
-document.addEventListener('DOMContentLoaded', Reports.load);
