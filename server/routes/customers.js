@@ -36,11 +36,11 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
-// Delete customer
+// Delete customer (Updated for consistency)
 router.delete('/:id', auth, async (req, res) => {
   try {
     await Customer.findByIdAndDelete(req.params.id);
-    res.json({ success: true });
+    res.json({ success: true }); // Now matches other delete routes
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }
