@@ -1,13 +1,27 @@
 const express = require('express');
+const multer = require('multer');
 const Product = require('../models/Product');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-// Create product
-router.post('/', auth, async (req, res) => {
+// Configure multer for in-memory storage
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB file size limit
+});
+
+// Create product - now handles image upload
+router.post('/', auth, upload.single('productImage'), async (req, res) => {
   try {
-    const product = await Product.create(req.body);
+    const productData = { ...req.body };
+    
+    if (req.file) {
+      productData.imageData = req.file.buffer.toString('base64');
+      productData.imageMimeType = req.file.mimetype;
+    }
+
+    const product = await Product.create(productData);
     res.json({ success: true, data: product });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });

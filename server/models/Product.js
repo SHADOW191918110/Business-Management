@@ -6,11 +6,14 @@ const ProductSchema = new mongoose.Schema({
   price: { type: Number, required: true, min: 0 },
   stock: { type: Number, default: 0, min: 0 },
   barcode: { type: String, unique: true, sparse: true },
-  imageUrl: { type: String },
+  // Replaced imageUrl with fields for Base64 data
+  imageData: { type: String },
+  imageMimeType: { type: String },
   status: { type: String, enum: ['active', 'inactive'], default: 'active' },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
+
 
 ProductSchema.index({ name: 'text', category: 1, barcode: 1 });
 

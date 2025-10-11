@@ -6,6 +6,7 @@ const Inventory = (() => {
     save: document.getElementById('save-product'),
     filter: document.getElementById('inventory-filter'),
     search: document.getElementById('inventory-search'),
+    form: document.getElementById('add-product-form'),
   };
 
   function statusBadge(stock) {
@@ -15,22 +16,33 @@ const Inventory = (() => {
   }
 
   function render(list) {
-    els.tbody.innerHTML = list.map(p => `
-      <tr data-id="${p._id}">
-        <td>${p._id.slice(-6)}</td>
-        <td>${p.name}</td>
-        <td>${p.category}</td>
-        <td>₹${p.price.toFixed(2)}</td>
-        <td>${p.stock}</td>
-        <td>${statusBadge(p.stock)}</td>
-        <td>
-          <button class="btn btn-secondary edit">Edit</button>
-          <button class="btn btn-danger delete">Delete</button>
-          <button class="btn btn-secondary inc">+1</button>
-          <button class="btn btn-secondary dec">-1</button>
-        </td>
-      </tr>
-    `).join('');
+    // You may want to add a new <th> for Image in index.html
+    els.tbody.innerHTML = list.map(p => {
+      const imgSrc = (p.imageData && p.imageMimeType) 
+        ? `data:${p.imageMimeType};base64,${p.imageData}`
+        : ''; // Add a placeholder if you want
+      return `
+        <tr data-id="${p._id}">
+          <td>${p._id.slice(-6)}</td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <img src="${imgSrc}" alt="${p.name}" width="40" height="40" style="object-fit: cover; border-radius: 4px;">
+              <span>${p.name}</span>
+            </div>
+          </td>
+          <td>${p.category}</td>
+          <td>₹${p.price.toFixed(2)}</td>
+          <td>${p.stock}</td>
+          <td>${statusBadge(p.stock)}</td>
+          <td>
+            <button class="btn btn-secondary edit">Edit</button>
+            <button class="btn btn-danger delete">Delete</button>
+            <button class="btn btn-secondary inc">+1</button>
+            <button class="btn btn-secondary dec">-1</button>
+          </td>
+        </tr>
+      `
+    }).join('');
 
     els.tbody.querySelectorAll('.delete').forEach(b => b.addEventListener('click', async (e) => {
       const id = e.target.closest('tr').dataset.id;
@@ -47,18 +59,24 @@ const Inventory = (() => {
   }
 
   function toggleModal(show) { 
+    els.form.reset();
     els.modal.classList.toggle('active', show); 
   }
 
   async function saveProduct() {
-    const body = {
-      name: document.getElementById('product-name').value,
-      category: document.getElementById('product-category').value,
-      price: parseFloat(document.getElementById('product-price').value || '0'),
-      stock: parseInt(document.getElementById('product-stock').value || '0', 10),
-      barcode: document.getElementById('product-barcode').value
-    };
-    await API.createProduct(body); 
+    const formData = new FormData();
+    formData.append('name', document.getElementById('product-name').value);
+    formData.append('category', document.getElementById('product-category').value);
+    formData.append('price', parseFloat(document.getElementById('product-price').value || '0'));
+    formData.append('stock', parseInt(document.getElementById('product-stock').value || '0', 10));
+    formData.append('barcode', document.getElementById('product-barcode').value);
+    
+    const imageFile = document.getElementById('product-image').files[0];
+    if (imageFile) {
+      formData.append('productImage', imageFile);
+    }
+
+    await API.createProduct(formData); 
     toggleModal(false); 
     await load(); 
     POS.init(); // Refresh POS products
@@ -73,6 +91,7 @@ const Inventory = (() => {
     els.addBtn.addEventListener('click', () => toggleModal(true));
     els.save.addEventListener('click', saveProduct);
     document.querySelector('#add-product-modal .close').addEventListener('click', () => toggleModal(false));
+    document.querySelector('#add-product-modal [data-action="cancel"]').addEventListener('click', () => toggleModal(false));
   }
 
   return { 

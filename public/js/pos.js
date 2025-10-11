@@ -19,15 +19,22 @@ const POS = (() => {
   const state = { products: [], filtered: [], cart: [], currentCategory: 'all' };
 
   function renderProducts(list) {
-    els.productGrid.innerHTML = list.map(p => `
-      <div class="product-card" data-id="${p._id}">
-        <div class="product-image"><i class="fas fa-box"></i></div>
-        <div class="product-info">
-          <span class="product-name">${p.name}</span>
-          <span class="product-price">₹${p.price.toFixed(2)}</span>
+    els.productGrid.innerHTML = list.map(p => {
+      const imageEl = (p.imageData && p.imageMimeType)
+        ? `<img src="data:${p.imageMimeType};base64,${p.imageData}" alt="${p.name}" style="width: 100%; height: 100%; object-fit: cover;">`
+        : '<i class="fas fa-box"></i>';
+
+      return `
+        <div class="product-card" data-id="${p._id}">
+          <div class="product-image">${imageEl}</div>
+          <div class="product-info">
+            <span class="product-name">${p.name}</span>
+            <span class="product-price">₹${p.price.toFixed(2)}</span>
+          </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
+
     els.productGrid.querySelectorAll('.product-card').forEach(card => card.addEventListener('click', () => addToCart(card.dataset.id)));
   }
 
@@ -53,6 +60,11 @@ const POS = (() => {
         <button class="btn btn-danger remove"><i class="fas fa-times"></i></button>
       </div>
     `).join('');
+
+    els.cartItems.querySelectorAll('.inc').forEach(b => b.addEventListener('click', () => changeQty(b.closest('.cart-item').dataset.id, +1)));
+    els.cartItems.querySelectorAll('.dec').forEach(b => b.addEventListener('click', () => changeQty(b.closest('.cart-item').dataset.id, -1)));
+    els.cartItems.querySelectorAll('.remove').forEach(b => b.addEventListener('click', () => removeItem(b.closest('.cart-item').dataset.id)));
+
     recalcTotals();
   }
 
@@ -77,7 +89,7 @@ const POS = (() => {
   }
 
   function toggleModal(modalId, show) {
-    document.getElementById(modalId)?.classList.toggle('active', show);
+      document.getElementById(modalId)?.classList.toggle('active', show);
   }
 
   function openPaymentModal() {
@@ -89,11 +101,15 @@ const POS = (() => {
 
   async function completeSale() {
     const payload = {
-      items: state.cart.map(ci => ({ product: ci._id, quantity: ci.qty })),
+      items: state.cart.map(ci => ({ product: ci._id, name: ci.name, price: ci.price, quantity: ci.qty, subtotal: ci.price * ci.qty })),
       taxRate: App.state.taxRate,
       paymentMethod: document.querySelector('.payment-method.active').dataset.method,
-      amountReceived: parseFloat(els.amountReceived.value || '0')
+      amountReceived: parseFloat(els.amountReceived.value || '0'),
+      subtotal: state.cart.reduce((s, ci) => s + ci.price * ci.qty, 0),
+      total: parseFloat(els.total.textContent.replace('₹', '')),
+      taxAmount: parseFloat(els.tax.textContent.replace('₹', '')),
     };
+
     try {
       const { success } = await API.createTransaction(payload);
       if (success) {
@@ -111,29 +127,10 @@ const POS = (() => {
   function bindEvents() {
     els.clearCart.addEventListener('click', () => { state.cart = []; renderCart(); });
     els.payNow.addEventListener('click', () => { if (state.cart.length) openPaymentModal(); else alert('Cart is empty'); });
-
     
-    // ** Event Delegation **
-    // Listen for clicks on the cart container instead of each button
-    els.cartItems.addEventListener('click', (e) => {
-        const target = e.target;
-        const cartItem = target.closest('.cart-item');
-        if (!cartItem) return;
-        const id = cartItem.dataset.id;
-        
-        if (target.matches('.inc')) {
-            changeQty(id, +1);
-        } else if (target.matches('.dec')) {
-            changeQty(id, -1);
-        } else if (target.matches('.remove') || target.closest('.remove')) {
-            removeItem(id);
-        }
-    });
-
     document.querySelectorAll('.modal .close').forEach(el => 
       el.addEventListener('click', () => toggleModal(el.closest('.modal').id, false))
     );
-        
     document.querySelector('#payment-modal [data-action="cancel"]').addEventListener('click', () => toggleModal('payment-modal', false));
         
     document.querySelectorAll('.payment-method').forEach(btn => btn.addEventListener('click', () => {

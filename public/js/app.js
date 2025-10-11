@@ -2,9 +2,20 @@
 const API = {
   token: null,
   async request(path, options = {}) {
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = {};
     if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+    
+    // Do not set Content-Type for FormData, browser does it
+    if (!(options.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
+
     try {
+      // Stringify body only if it's not FormData
+      if (options.body && !(options.body instanceof FormData)) {
+        options.body = JSON.stringify(options.body);
+      }
+
       const res = await fetch(path, { ...options, headers });
       const data = await res.json();
       if (!res.ok) {
@@ -22,19 +33,20 @@ const API = {
     }
   },
   login(username, password) {
-    return this.request('/api/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+    return this.request('/api/auth/login', { method: 'POST', body: { username, password } });
   },
   bootstrap() { return this.request('/api/auth/bootstrap', { method: 'POST' }); },
   getProducts(params = '') { return this.request(`/api/products${params}`); },
-  createProduct(body) { return this.request('/api/products', { method: 'POST', body: JSON.stringify(body) }); },
+  createProduct(formData) { return this.request('/api/products', { method: 'POST', body: formData }); },
   deleteProduct(id) { return this.request(`/api/products/${id}`, { method: 'DELETE' }); },
   getCustomers(params='') { return this.request(`/api/customers${params}`); },
-  createCustomer(body) { return this.request('/api/customers', { method: 'POST', body: JSON.stringify(body) }); },
-  adjustStock(id, delta) { return this.request(`/api/inventory/adjust/${id}`, { method: 'POST', body: JSON.stringify({ delta }) }); },
-  createTransaction(body) { return this.request('/api/transactions', { method: 'POST', body: JSON.stringify(body) }); },
+  createCustomer(body) { return this.request('/api/customers', { method: 'POST', body }); },
+  adjustStock(id, delta) { return this.request(`/api/inventory/adjust/${id}`, { method: 'POST', body: { delta } }); },
+  createTransaction(body) { return this.request('/api/transactions', { method: 'POST', body }); },
   getDashboard() { return this.request('/api/reports/dashboard'); }
 };
 
+// ... (Rest of App logic remains the same)
 // App shell logic, nav, auth, global search
 const App = (() => {
   const state = {
