@@ -28,7 +28,6 @@ const POS = (() => {
         </div>
       </div>
     `).join('');
-
     els.productGrid.querySelectorAll('.product-card').forEach(card => card.addEventListener('click', () => addToCart(card.dataset.id)));
   }
 
@@ -54,11 +53,6 @@ const POS = (() => {
         <button class="btn btn-danger remove"><i class="fas fa-times"></i></button>
       </div>
     `).join('');
-
-    els.cartItems.querySelectorAll('.inc').forEach(b => b.addEventListener('click', () => changeQty(b.closest('.cart-item').dataset.id, +1)));
-    els.cartItems.querySelectorAll('.dec').forEach(b => b.addEventListener('click', () => changeQty(b.closest('.cart-item').dataset.id, -1)));
-    els.cartItems.querySelectorAll('.remove').forEach(b => b.addEventListener('click', () => removeItem(b.closest('.cart-item').dataset.id)));
-
     recalcTotals();
   }
 
@@ -83,7 +77,7 @@ const POS = (() => {
   }
 
   function toggleModal(modalId, show) {
-      document.getElementById(modalId)?.classList.toggle('active', show);
+    document.getElementById(modalId)?.classList.toggle('active', show);
   }
 
   function openPaymentModal() {
@@ -100,7 +94,6 @@ const POS = (() => {
       paymentMethod: document.querySelector('.payment-method.active').dataset.method,
       amountReceived: parseFloat(els.amountReceived.value || '0')
     };
-
     try {
       const { success } = await API.createTransaction(payload);
       if (success) {
@@ -118,10 +111,30 @@ const POS = (() => {
   function bindEvents() {
     els.clearCart.addEventListener('click', () => { state.cart = []; renderCart(); });
     els.payNow.addEventListener('click', () => { if (state.cart.length) openPaymentModal(); else alert('Cart is empty'); });
+
     
+    // ** Event Delegation **
+    // Listen for clicks on the cart container instead of each button
+    els.cartItems.addEventListener('click', (e) => {
+        const target = e.target;
+        const cartItem = target.closest('.cart-item');
+        if (!cartItem) return;
+        const id = cartItem.dataset.id;
+        
+        if (target.matches('.inc')) {
+            changeQty(id, +1);
+        } else if (target.matches('.dec')) {
+            changeQty(id, -1);
+        } else if (target.matches('.remove') || target.closest('.remove')) {
+            removeItem(id);
+        }
+    });
+
     document.querySelectorAll('.modal .close').forEach(el => 
       el.addEventListener('click', () => toggleModal(el.closest('.modal').id, false))
     );
+        
+    document.querySelector('#payment-modal [data-action="cancel"]').addEventListener('click', () => toggleModal('payment-modal', false));
         
     document.querySelectorAll('.payment-method').forEach(btn => btn.addEventListener('click', () => {
       document.querySelectorAll('.payment-method').forEach(b => b.classList.remove('active'));

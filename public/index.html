@@ -2,19 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
     <title>Professional POS System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!-- Loading Screen -->
     <div id="loading-screen" class="loading-screen">
         <div class="loading-spinner"></div>
         <p>Loading POS System...</p>
     </div>
 
-    <!-- Login Screen -->
     <div id="login-screen" class="login-screen">
         <div class="login-container">
             <div class="login-header">
@@ -31,7 +32,7 @@
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" required>
                 </div>
-                <button type="submit" class="login-btn">
+                <button type="submit" class="login-btn btn btn-primary">
                     <i class="fas fa-sign-in-alt"></i> Login
                 </button>
             </form>
@@ -42,9 +43,7 @@
         </div>
     </div>
 
-    <!-- Main Application -->
     <div id="main-app" class="main-app hidden">
-        <!-- Header -->
         <header class="app-header">
             <div class="header-left">
                 <i class="fas fa-cash-register"></i>
@@ -66,7 +65,6 @@
             </div>
         </header>
 
-        <!-- Navigation -->
         <nav class="main-nav">
             <button class="nav-btn active" data-section="pos">
                 <i class="fas fa-cash-register"></i>
@@ -90,9 +88,7 @@
             </button>
         </nav>
 
-        <!-- Main Content -->
         <main class="main-content">
-            <!-- POS Section -->
             <section id="pos-section" class="content-section active">
                 <div class="pos-layout">
                     <div class="pos-left">
@@ -104,15 +100,13 @@
                             <button class="category-btn" data-category="books">Books</button>
                         </div>
                         <div class="product-grid" id="product-grid">
-                            <!-- Products will be loaded dynamically -->
-                        </div>
+                            </div>
                     </div>
                     <div class="pos-right">
                         <div class="cart-section">
                             <h3>Current Sale</h3>
                             <div class="cart-items" id="cart-items">
-                                <!-- Cart items will appear here -->
-                            </div>
+                                </div>
                             <div class="cart-summary">
                                 <div class="summary-row">
                                     <span>Subtotal:</span>
@@ -140,7 +134,6 @@
                 </div>
             </section>
 
-            <!-- Inventory Section -->
             <section id="inventory-section" class="content-section">
                 <div class="section-header">
                     <h2>Inventory Management</h2>
@@ -172,13 +165,11 @@
                             </tr>
                         </thead>
                         <tbody id="inventory-tbody">
-                            <!-- Inventory items will be loaded here -->
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
             </section>
 
-            <!-- Customers Section -->
             <section id="customers-section" class="content-section">
                 <div class="section-header">
                     <h2>Customer Management</h2>
@@ -187,11 +178,9 @@
                     </button>
                 </div>
                 <div class="customers-grid" id="customers-grid">
-                    <!-- Customer cards will be loaded here -->
-                </div>
+                    </div>
             </section>
 
-            <!-- Reports Section -->
             <section id="reports-section" class="content-section">
                 <div class="section-header">
                     <h2>Sales Reports & Analytics</h2>
@@ -230,13 +219,11 @@
                     <div class="recent-transactions">
                         <h3>Recent Transactions</h3>
                         <div class="transactions-list" id="transactions-list">
-                            <!-- Recent transactions will be loaded here -->
-                        </div>
+                            </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Settings Section -->
             <section id="settings-section" class="content-section">
                 <div class="section-header">
                     <h2>System Settings</h2>
@@ -283,8 +270,6 @@
         </main>
     </div>
 
-    <!-- Modals -->
-    <!-- Payment Modal -->
     <div id="payment-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -328,7 +313,6 @@
         </div>
     </div>
 
-    <!-- Add Product Modal -->
     <div id="add-product-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -371,7 +355,6 @@
         </div>
     </div>
 
-    <!-- Add Customer Modal -->
     <div id="add-customer-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
