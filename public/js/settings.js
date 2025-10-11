@@ -5,22 +5,24 @@ const Settings = (() => {
 
     storeForm?.addEventListener('submit', (e) => {
       e.preventDefault();
-      alert('Store settings saved (demo).');
+      alert('Store settings saved');
     });
 
     taxForm?.addEventListener('submit', (e) => {
       e.preventDefault();
-      const taxRate = parseFloat(document.getElementById('tax-rate').value || '18');
-      App.state.taxRate = taxRate; // Update global state
-      alert(`Tax rate updated to ${taxRate}%.`);
+      const tax = parseFloat(document.getElementById('tax-rate').value || '18');
+      App.state.taxRate = tax;
+      if (typeof POS !== 'undefined' && POS.recalculate) {
+          POS.recalculate();
+      }
+      alert('Tax settings saved');
     });
   }
 
   return { 
-      init() {
-          bindEvents();
-          // No data to load, so we return a resolved promise
-          return Promise.resolve();
-      }
+    init() {
+      bindEvents();
+      return Promise.resolve(); // No async data to load
+    } 
   };
 })();

@@ -2,7 +2,7 @@ const express = require('express');
 const Transaction = require('../models/Transaction');
 const Product = require('../models/Product');
 const auth = require('../middleware/auth');
-
+const mongoose = require('mongoose');
 const router = express.Router();
 
 // Create transaction (sale)
@@ -79,6 +79,37 @@ router.get('/', auth, async (req, res) => {
     res.json({ success: true, data: tx });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
+  }
+});router.post('/', auth, async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { items } = req.body;
+    // ... (your existing validation)
+
+    for (const it of items) {
+      const product = await Product.findById(it.product).session(session);
+      if (!product || product.stock < it.quantity) {
+        throw new Error(`Insufficient stock for ${product.name}`);
+      }
+    }
+
+    // All checks passed, now perform updates
+    for (const it of items) {
+      await Product.findByIdAndUpdate(it.product, { $inc: { stock: -it.quantity } }, { session });
+    }
+
+    const trx = await Transaction.create([req.body], { session });
+
+    await session.commitTransaction();
+    res.json({ success: true, data: trx[0] });
+
+  } catch (err) {
+    await session.abortTransaction();
+    res.status(400).json({ success: false, message: err.message });
+  } finally {
+    session.endSession();
   }
 });
 

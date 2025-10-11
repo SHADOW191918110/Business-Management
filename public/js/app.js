@@ -1,3 +1,40 @@
+// API Helper object must be defined FIRST
+const API = {
+  token: null,
+  async request(path, options = {}) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+    try {
+      const res = await fetch(path, { ...options, headers });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || `Request failed with status ${res.status}`);
+      }
+      if (!data.success && data.message) {
+         // Handle cases where API returns success: false but a 200 status
+         throw new Error(data.message);
+      }
+      return data;
+    } catch (err) {
+      console.error(`API Error: ${err.message}`);
+      // You might want to show a user-friendly error message here
+      throw err; // Re-throw the error so the calling function can catch it
+    }
+  },
+  login(username, password) {
+    return this.request('/api/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+  },
+  bootstrap() { return this.request('/api/auth/bootstrap', { method: 'POST' }); },
+  getProducts(params = '') { return this.request(`/api/products${params}`); },
+  createProduct(body) { return this.request('/api/products', { method: 'POST', body: JSON.stringify(body) }); },
+  deleteProduct(id) { return this.request(`/api/products/${id}`, { method: 'DELETE' }); },
+  getCustomers(params='') { return this.request(`/api/customers${params}`); },
+  createCustomer(body) { return this.request('/api/customers', { method: 'POST', body: JSON.stringify(body) }); },
+  adjustStock(id, delta) { return this.request(`/api/inventory/adjust/${id}`, { method: 'POST', body: JSON.stringify({ delta }) }); },
+  createTransaction(body) { return this.request('/api/transactions', { method: 'POST', body: JSON.stringify(body) }); },
+  getDashboard() { return this.request('/api/reports/dashboard'); }
+};
+
 // App shell logic, nav, auth, global search
 const App = (() => {
   const state = {
@@ -30,7 +67,7 @@ const App = (() => {
   }
   
   async function initializeModules() {
-    // This function initializes all parts of the application
+    // This function now initializes all parts of the application
     await Promise.all([
       POS.init(), 
       Inventory.init(), 
@@ -62,7 +99,7 @@ const App = (() => {
     } else {
       els.login.classList.remove('hidden');
     }
-    els.loading.classList.add('hidden');
+    els.loading.style.display = 'none';
   }
 
   async function handleLogin(e) {
@@ -96,7 +133,11 @@ const App = (() => {
     els.loginForm.addEventListener('submit', handleLogin);
     els.logoutBtn.addEventListener('click', handleLogout);
     els.navButtons.forEach(btn => btn.addEventListener('click', () => showSection(btn.dataset.section)));
-    els.globalSearch.addEventListener('input', (e) => POS.search(e.target.value));
+    els.globalSearch.addEventListener('input', (e) => {
+        if(typeof POS !== 'undefined' && POS.search) {
+            POS.search(e.target.value);
+        }
+    });
   }
 
   return {
@@ -107,34 +148,5 @@ const App = (() => {
     }
   };
 })();
-
-// API Helper - No changes needed here, but included for completeness
-const API = {
-  token: null,
-  async request(path, options = {}) {
-    const headers = { 'Content-Type': 'application/json' };
-    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
-    try {
-      const res = await fetch(path, { ...options, headers });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || `Request failed with status ${res.status}`);
-      if (!data.success && data.message) throw new Error(data.message);
-      return data;
-    } catch (err) {
-      console.error(`API Error: ${err.message}`);
-      throw err;
-    }
-  },
-  login(username, password) { return this.request('/api/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }); },
-  bootstrap() { return this.request('/api/auth/bootstrap', { method: 'POST' }); },
-  getProducts(params = '') { return this.request(`/api/products${params}`); },
-  createProduct(body) { return this.request('/api/products', { method: 'POST', body: JSON.stringify(body) }); },
-  deleteProduct(id) { return this.request(`/api/products/${id}`, { method: 'DELETE' }); },
-  getCustomers(params='') { return this.request(`/api/customers${params}`); },
-  createCustomer(body) { return this.request('/api/customers', { method: 'POST', body: JSON.stringify(body) }); },
-  adjustStock(id, delta) { return this.request(`/api/inventory/adjust/${id}`, { method: 'POST', body: JSON.stringify({ delta }) }); },
-  createTransaction(body) { return this.request('/api/transactions', { method: 'POST', body: JSON.stringify(body) }); },
-  getDashboard() { return this.request('/api/reports/dashboard'); }
-};
 
 document.addEventListener('DOMContentLoaded', App.init);

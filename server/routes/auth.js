@@ -7,6 +7,9 @@ const router = express.Router();
 
 // Register admin bootstrap (DEV ONLY)
 router.post('/bootstrap', async (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ success: false, message: 'This route is disabled in production.' });
+  }
   try {
     const exists = await User.findOne({ username: 'admin' });
     if (exists) return res.json({ success: true, message: 'Admin already exists' });
@@ -39,5 +42,6 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
 
 module.exports = router;

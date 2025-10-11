@@ -8,14 +8,10 @@ const Reports = (() => {
   };
 
   function renderRecent(list) {
-    if (!list || list.length === 0) {
-        els.list.innerHTML = `<p style="color: var(--color-text-secondary);">No recent transactions.</p>`;
-        return;
-    }
     els.list.innerHTML = list.map(t => `
-      <div class="summary-row">
-        <span>#${t._id.slice(-6)} - ${new Date(t.createdAt).toLocaleTimeString()}</span>
-        <strong>₹${t.total.toFixed(2)}</strong>
+      <div class="trx">
+        <div><strong>#${t._id.slice(-6)}</strong> • ₹${t.total.toFixed(2)} • ${new Date(t.createdAt).toLocaleTimeString()}</div>
+        <div>${t.items.map(i => `${i.quantity}x ${i.name}`).join(', ')}</div>
       </div>
     `).join('');
   }
@@ -28,14 +24,15 @@ const Reports = (() => {
         els.totalProducts.textContent = data.totalProducts;
         els.totalCustomers.textContent = data.totalCustomers;
         renderRecent(data.recent || []);
-    } catch (err) {
-        console.error("Failed to load reports:", err);
+    } catch(err) {
+        console.error("Failed to load reports data", err);
     }
   }
   
   return {
     load,
     init() {
+        // No events to bind, just load data
         return load();
     }
   };
